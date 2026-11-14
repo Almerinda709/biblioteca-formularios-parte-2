@@ -28,6 +28,7 @@
                 <th>Ano</th>
                 <th>Categorias</th>
                 <th>Disponível</th>
+                <th></th>
             </tr>
         </thead>
         <tbody>
@@ -43,6 +44,7 @@
                         <span class="indisponivel">Não</span>
                     {% endif %}
                 </td>
+                <td><a href="{% url 'biblioteca:editar_livro' livro.pk %}">Editar</a></td>
             </tr>
             {% endfor %}
         </tbody>
