@@ -1,4 +1,5 @@
 from django import forms
+from django.utils import timezone
 
 from .models import Book
 
@@ -48,3 +49,19 @@ class LivroForm(forms.ModelForm):
             },
         }
 
+    def clean_title(self):
+        titulo = " ".join(self.cleaned_data["title"].split())
+        if len(titulo) < 3:
+            raise forms.ValidationError(
+                "O título precisa ter pelo menos 3 caracteres (sem contar os espaços das pontas). Digite o título completo do livro."
+            )
+        return titulo
+
+    def clean_year(self):
+        ano = self.cleaned_data["year"]
+        ano_atual = timezone.localdate().year
+        if ano > ano_atual:
+            raise forms.ValidationError(
+                f"O ano não pode ser depois de {ano_atual}. Confira se digitou o ano de publicação certo."
+            )
+        return ano
