@@ -1,6 +1,7 @@
 from django.db import IntegrityError
 from django.db.models import ProtectedError
-from django.test import TestCase
+from django.test import Client, TestCase
+from django.urls import reverse
 
 from .models import Author, Book, Category
 
@@ -52,3 +53,40 @@ class BookTests(TestCase):
         livro = Book.objects.create(title="Dom Casmurro", author=autor, year=1899)
         livro.categories.set([Category.objects.create(name="Romance"), Category.objects.create(name="Clássico")])
         self.assertEqual(livro.categories.count(), 2)
+
+
+class NovoAutorTests(TestCase):
+    def test_pagina_abre_com_formulario(self):
+        resposta = self.client.get(reverse("biblioteca:novo_autor"))
+        self.assertEqual(resposta.status_code, 200)
+        self.assertContains(resposta, "csrfmiddlewaretoken")
+        self.assertContains(resposta, "Nacionalidade")
+
+    def test_cadastra_e_redireciona_para_o_autor(self):
+        resposta = self.client.post(
+            reverse("biblioteca:novo_autor"),
+            {"nome": "Clarice Lispector", "nacionalidade": "Brasileira"},
+        )
+        autor = Author.objects.get()
+        self.assertRedirects(resposta, reverse("biblioteca:author_detail", args=[autor.pk]))
+        self.assertEqual(autor.nationality, "Brasileira")
+
+    def test_nacionalidade_pode_ficar_em_branco(self):
+        self.client.post(reverse("biblioteca:novo_autor"), {"nome": "Jorge Amado", "nacionalidade": ""})
+        self.assertEqual(Author.objects.get().nationality, "")
+
+    def test_sem_nome_mostra_erro_e_nao_salva(self):
+        resposta = self.client.post(reverse("biblioteca:novo_autor"), {"nome": "", "nacionalidade": "Brasileira"})
+        self.assertEqual(resposta.status_code, 200)
+        self.assertContains(resposta, "Informe o nome do autor.")
+        self.assertEqual(Author.objects.count(), 0)
+
+    def test_post_sem_csrf_e_bloqueado(self):
+        cliente = Client(enforce_csrf_checks=True)
+        resposta = cliente.post(reverse("biblioteca:novo_autor"), {"nome": "Jorge Amado"})
+        self.assertEqual(resposta.status_code, 403)
+        self.assertEqual(Author.objects.count(), 0)
+
+    def test_lista_tem_link_novo_autor(self):
+        resposta = self.client.get(reverse("biblioteca:listar_livros"))
+        self.assertContains(resposta, reverse("biblioteca:novo_autor"))
