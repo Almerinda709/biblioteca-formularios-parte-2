@@ -1,4 +1,12 @@
 from django.db import models
+from django.db import models
+from django.core.validators import (
+    MinLengthValidator,
+    MinValueValidator,
+    MaxValueValidator,
+    RegexValidator,
+)
+from .validators import validar_ano_publicacao
 
 
 class Author(models.Model):
@@ -27,21 +35,57 @@ class Category(models.Model):
 
 
 class Book(models.Model):
-    title = models.CharField("título", max_length=200)
+    title = models.CharField(
+        "título",
+        max_length=200,
+        validators=[MinLengthValidator(3)]
+    )
+
     author = models.ForeignKey(
         Author,
         on_delete=models.PROTECT,
         related_name="books",
         verbose_name="autor",
     )
+
     categories = models.ManyToManyField(
         Category,
         blank=True,
         related_name="books",
         verbose_name="categorias",
     )
-    year = models.IntegerField("ano de publicação")
+
+    year = models.IntegerField(
+        "ano de publicação",
+        validators=[
+            MinValueValidator(1450),
+            validar_ano_publicacao,
+        ]
+    )
+
     available = models.BooleanField("disponível", default=True)
+
+    pages = models.PositiveIntegerField(
+        "páginas",
+        blank=True,
+        null=True,
+        validators=[
+            MinValueValidator(1),
+            MaxValueValidator(5000),
+        ]
+    )
+
+    isbn = models.CharField(
+        "ISBN",
+        max_length=13,
+        blank=True,
+        validators=[
+            RegexValidator(
+                regex=r"^\d{13}$",
+                message="O ISBN deve possuir exatamente 13 dígitos."
+            )
+        ]
+    )
 
     class Meta:
         ordering = ["title"]
@@ -50,3 +94,4 @@ class Book(models.Model):
 
     def __str__(self):
         return f"{self.title} ({self.year})"
+

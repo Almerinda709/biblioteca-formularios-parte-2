@@ -26,13 +26,21 @@ class AutorForm(forms.Form):
 class LivroForm(forms.ModelForm):
     class Meta:
         model = Book
-        fields = ["title", "author", "year", "available", "categories"]
+        fields = [  "title",
+                    "author",
+                    "year",
+                    "available",
+                    "categories",
+                    "pages",
+                    "isbn", ]
         labels = {
             "title": "Título",
             "author": "Autor",
             "year": "Ano de publicação",
             "available": "Disponível para empréstimo",
             "categories": "Categorias",
+            "pages": "Páginas",
+            "isbn": "ISBN",
         }
         widgets = {
             "categories": forms.CheckboxSelectMultiple,
@@ -49,19 +57,7 @@ class LivroForm(forms.ModelForm):
             },
         }
 
-    def clean_title(self):
-        titulo = " ".join(self.cleaned_data["title"].split())
-        if len(titulo) < 3:
-            raise forms.ValidationError(
-                "O título precisa ter pelo menos 3 caracteres (sem contar os espaços das pontas). Digite o título completo do livro."
-            )
-        return titulo
+    
+def clean_title(self):
+    return self.cleaned_data["title"].strip()
 
-    def clean_year(self):
-        ano = self.cleaned_data["year"]
-        ano_atual = timezone.localdate().year
-        if ano > ano_atual:
-            raise forms.ValidationError(
-                f"O ano não pode ser depois de {ano_atual}. Confira se digitou o ano de publicação certo."
-            )
-        return ano
