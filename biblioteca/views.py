@@ -41,3 +41,11 @@ def livro_form(request, pk=None):
 
     titulo = "Editar livro" if livro else "Novo livro"
     return render(request, "biblioteca/livro_form.html", {"form": form, "titulo": titulo, "livro": livro})
+
+
+def excluir_livro(request, pk):
+    livro = get_object_or_404(Book, pk=pk)
+    if request.method == "POST":
+        livro.delete()
+        return redirect("biblioteca:listar_livros")
+    return render(request, "biblioteca/excluir_livro.html", {"livro": livro})
