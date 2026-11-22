@@ -19,6 +19,9 @@ db.sqlite3
 db.sqlite3-journal
 media/
 
+# Variaveis de ambiente
+.env
+
 # Node
 node_modules/
 npm-debug.log*
